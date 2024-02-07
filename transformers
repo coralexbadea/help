@@ -1,0 +1,4 @@
+Fit into memory:
+  !pip install transformers diffusers accelerate xformers
+  pipeline.enable_model_cpu_offload()
+  pipeline.enable_xformers_memory_efficient_attention()
