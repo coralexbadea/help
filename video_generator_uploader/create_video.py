@@ -5,11 +5,15 @@ from PIL import Image, ImageDraw, ImageFont
 from io import BytesIO
 import yt_dlp
 from upload_video import auth_and_upload 
+import numpy as np
 
-def download_audio_from_youtube(youtube_url, output_path='audio.mp3'):
+# Define the folder for saving files
+BASE_DIR = r'C:\\Users\\user\\Desktop\\ProramFiles\\create_video'
+
+def download_audio_from_youtube(youtube_url, output_path=os.path.join(BASE_DIR, 'audio.mp3')):
     ydl_opts = {
         'format': 'bestaudio/best',
-        'outtmpl': 'audio',  # Changed this line to avoid .mp3 extension
+        'outtmpl': os.path.join(BASE_DIR, 'audio'),  # Changed this line to avoid .mp3 extension
         'postprocessors': [{
             'key': 'FFmpegExtractAudio',
             'preferredcodec': 'mp3',
@@ -23,7 +27,7 @@ def download_audio_from_youtube(youtube_url, output_path='audio.mp3'):
             ydl.download([youtube_url])
         
         # Rename the downloaded file to audio.mp3
-        os.rename('audio.mp3', output_path)  # Rename the original file to audio.mp3
+        os.rename(os.path.join(BASE_DIR, 'audio.mp3'), output_path)  # Rename the original file to audio.mp3
 
         print(f"Downloaded audio file: {output_path}")
 
@@ -82,7 +86,6 @@ def get_random_image_url():
     else:
         print("Unexpected response format:", image_data)
         return "Image not found"
-from PIL import Image, ImageDraw, ImageFont
 
 def wrap_text(text, max_words):
     """Wrap the text into lines with a maximum number of words."""
@@ -94,14 +97,24 @@ def wrap_text(text, max_words):
         wrapped_lines.append(line)
     
     return '\n'.join(wrapped_lines)
-import numpy as np
+
+
 def calculate_brightness(img):
-    
     # Convert the image to grayscale
     grayscale_image = img.convert('L')  # 'L' mode is for grayscale
     
-    # Convert the grayscale image to a numpy array
-    np_image = np.array(grayscale_image)
+    # Get the image dimensions
+    width, height = grayscale_image.size
+    
+    # Define the coordinates to crop the middle horizontal part
+    top = height // 3
+    bottom = 2 * height // 3
+    
+    # Crop the image to get the middle third
+    middle_part = grayscale_image.crop((0, top, width, bottom))
+    
+    # Convert the cropped middle part to a numpy array
+    np_image = np.array(middle_part)
     
     # Calculate the average pixel intensity (brightness)
     brightness = np.mean(np_image)
@@ -145,15 +158,11 @@ def render_text_on_image(image_path, text, output_path, padding=40):
     # Draw the wrapped text on the padded image
     brightness = int(calculate_brightness(img))
     print(brightness)
-    
-    draw.text(text_position, wrapped_text, font=font, fill=(255-brightness,255-brightness,255-brightness))
+    color = "yellow" if brightness < 99 else "black"
+    draw.text(text_position, wrapped_text, font=font, fill=color)
     padded_img.save(output_path)
 
-# Example usage
-# render_text_on_image("input_image.jpg", "Your long text goes here...", "output_image.jpg")
-
-# Create video with Bible verses, images, and audio
-def create_bible_verse_video(audio_file, verses, image_urls, output_file='bible_video.mp4'):
+def create_bible_verse_video(audio_file, verses, image_urls, output_file=os.path.join(BASE_DIR, 'bible_video.mp4')):
     clips = []
     
     for i in range(len(verses)):
@@ -164,11 +173,11 @@ def create_bible_verse_video(audio_file, verses, image_urls, output_file='bible_
         try:
             response = requests.get(image_urls[i])
             img = Image.open(BytesIO(response.content))
-            img.save(f"image_{i}.png")
+            img.save(os.path.join(BASE_DIR, f"image_{i}.png"))
             
-            render_text_on_image(f"image_{i}.png", verses[i], f"image_with_text_{i}.png")
+            render_text_on_image(os.path.join(BASE_DIR, f"image_{i}.png"), verses[i], os.path.join(BASE_DIR, f"image_with_text_{i}.png"))
             
-            image_clip = ImageClip(f"image_with_text_{i}.png", duration=7)
+            image_clip = ImageClip(os.path.join(BASE_DIR, f"image_with_text_{i}.png"), duration=7)
             clips.append(image_clip)
         
         except Exception as e:
@@ -184,7 +193,6 @@ def create_bible_verse_video(audio_file, verses, image_urls, output_file='bible_
     final_clip.write_videofile(output_file, fps=24)
     print(f"Video saved as {output_file}")
 
-# Main function
 def main(youtube_url):
     audio_file = download_audio_from_youtube(youtube_url)
     
@@ -198,8 +206,10 @@ def main(youtube_url):
     
     create_bible_verse_video(audio_file, verses, image_urls)
 
-# Example Usage
-if __name__ == "__main__":
+def final():
     youtube_url = "https://www.youtube.com/watch?v=qg6NwETl2VY"  # Replace with a valid URL
     main(youtube_url)
     auth_and_upload()
+
+if __name__ == "__main__":
+    final()

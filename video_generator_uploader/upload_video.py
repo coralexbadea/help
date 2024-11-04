@@ -13,9 +13,10 @@ scopes = ["https://www.googleapis.com/auth/youtube.upload"]
 # OAuth 2.0 Client Credentials File
 client_secrets_file = "C:\\Users\\user\\Desktop\\ProramFiles\\create_video\\client_secret.json"
 
+BASE_DIR = r'C:\\Users\\user\\Desktop\\ProgramFiles\\create_video'
 
 # Video file and metadata
-video_file = "bible_video.mp4"
+video_file = os.path.join(BASE_DIR, 'bible_video.mp4')
 video_title = "Bible Verse"
 video_description = "Bible Verse Song"
 video_category_id = "22"  # For 'People & Blogs' category
